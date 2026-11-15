@@ -53,7 +53,7 @@ Reference: [Aviagen Ross 308 / 308 FF Broiler Performance Objectives (2022)](htt
 All added records are included in JSON backups. Existing records are retained when the app is updated.
 
 - The ChickenVerse research dataset is not bundled. Its published CC BY-NC-SA 4.0 licence is non-commercial; obtain separate permission or use a commercially cleared dataset before training or distributing a commercial chicken detector.
-- A generative AI assistant and camera-based AI detection are not included in this static release. They require a secure backend or a properly licensed, trained and optimized on-device model. Never put private model API keys in public frontend code.
+- The AI assistant and optional vision-based photo estimate are now included in the frontend, but remain inactive until the separate secure Cloudflare Worker is deployed and configured. The photo estimate is not a trained bird detector and must be manually verified. Never put private model API keys in public frontend code.
 
 
 ## Genuine AI assistant and optional photo estimate (secure backend)
