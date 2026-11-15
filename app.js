@@ -27,8 +27,16 @@ $('reset').onclick=async()=>{if(confirm('Delete all local farm data?')&&confirm(
 $('menu').setAttribute('aria-controls','nav');$('menu').setAttribute('aria-expanded','false');$('menu').setAttribute('aria-label','Open navigation menu');
 function closeNav(){$('nav').classList.remove('open');$('menu').setAttribute('aria-expanded','false');$('menu').setAttribute('aria-label','Open navigation menu')}
 $('menu').onclick=()=>{let opening=!$('nav').classList.contains('open');$('nav').classList.toggle('open',opening);$('menu').setAttribute('aria-expanded',String(opening));$('menu').setAttribute('aria-label',opening?'Close navigation menu':'Open navigation menu')};
-// Close the mobile drawer when the user taps anywhere outside it.
-document.addEventListener('click',e=>{if($('nav').classList.contains('open')&&!$('nav').contains(e.target)&&!$('menu').contains(e.target))closeNav()});
+// Close the mobile drawer as soon as the user touches outside it.
+function outsideNav(e){
+  const drawer=$('nav'),button=$('menu');
+  if(drawer.classList.contains('open')&&!drawer.contains(e.target)&&!button.contains(e.target))closeNav();
+}
+// Capture pointer/touch interaction early; retain click as a fallback.
+document.addEventListener('pointerdown',outsideNav,true);
+document.addEventListener('touchstart',outsideNav,{capture:true,passive:true});
+document.addEventListener('click',outsideNav);
+$('main').addEventListener('click',()=>{if($('nav').classList.contains('open'))closeNav()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav()});
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
 async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);if(h)page(h);if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
