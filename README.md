@@ -51,3 +51,6 @@ Reference: [Aviagen Ross 308 / 308 FF Broiler Performance Objectives (2022)](htt
 - On-device farm insights: transparent rule-based prompts using recorded feed cover, mortality entries, health due dates, growth records, layer egg records and financial activity. No farm data is sent to an external AI service; this is not a generative AI veterinarian or predictive model.
 
 All added records are included in JSON backups. Existing records are retained when the app is updated.
+
+- The ChickenVerse research dataset is not bundled. Its published CC BY-NC-SA 4.0 licence is non-commercial; obtain separate permission or use a commercially cleared dataset before training or distributing a commercial chicken detector.
+- A generative AI assistant and camera-based AI detection are not included in this static release. They require a secure backend or a properly licensed, trained and optimized on-device model. Never put private model API keys in public frontend code.
