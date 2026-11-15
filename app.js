@@ -36,7 +36,7 @@ function outsideNav(e){
 document.addEventListener('pointerdown',outsideNav,true);
 document.addEventListener('touchstart',outsideNav,{capture:true,passive:true});
 document.addEventListener('click',outsideNav);
-$('main').addEventListener('click',()=>{if($('nav').classList.contains('open'))closeNav()});
+$('main').addEventListener('click',e=>{if(!$('menu').contains(e.target)&&$('nav').classList.contains('open'))closeNav()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav()});
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
 async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);if(h)page(h);if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
