@@ -63,7 +63,7 @@ All added records are included in JSON backups. Existing records are retained wh
 - The AI assistant is not a veterinarian, nutritionist or accountant. It must identify uncertainty, avoid disease diagnosis or medication dosing, and distinguish recorded data from assumptions.
 - The OpenAI API is billed separately from a ChatGPT subscription. Create an OpenAI API project key and add it as a Cloudflare Worker secret named `OPENAI_API_KEY`. Also set `AI_ACCESS_CODE` as a separate private access code secret. Never put either secret in this GitHub repository or in the browser.
 - Deploy the Worker, then enter its HTTPS URL and the same AI access code in the app's Settings. Configure the Worker allowed origin to `https://masoud-engineer.github.io`.
-- AI conversations are held only in the current page session; they are not stored in farm records or cloud history. Local farm data remains on the device unless explicitly sent with an AI request.
+- AI conversations are held only in the current page session; they are not stored in farm records or cloud history. The app access code is stored locally for convenience but is excluded from downloadable farm backups. Local farm data remains on the device unless explicitly sent with an AI request.
 
 ### Deploy the AI Worker
 1. Create a Cloudflare account and open **Workers & Pages** → **Create** → **Worker**.
