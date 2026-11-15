@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "poultrysmart-ai-api",
+  "main": "index.js",
+  "compatibility_date": "2026-11-16",
+  "vars": {
+    "OPENAI_MODEL": "gpt-6-luna",
+    "ALLOWED_ORIGINS": "https://masoud-engineer.github.io"
+  },
+  "observability": { "enabled": true }
+}
