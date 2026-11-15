@@ -72,11 +72,12 @@ function renderExtended(){
 function renderInsights(){
  const items=[];
  const add=(priority,title,detail,action)=>items.push({priority,title,detail,action});
- const totalDaily=daily(),available=stock(),cover=totalDaily>0?available/totalDaily:Infinity;
+ const missingFeedTargets=d.flocks.filter(x=>pop(x)>0&&!(feedGrams(x)>0));const totalDaily=daily(),available=stock(),projectionValid=totalDaily>0&&!missingFeedTargets.length,cover=projectionValid?available/totalDaily:Infinity;
  const money=d.settings.currency||'TZS';
  if(!d.flocks.length)add('info','Start with a flock','Create a flock and enter its start date, bird count and feeding target to activate farm monitoring.','Open Flock management and create your first flock.');
- if(d.flocks.length&&totalDaily<=0)add('warning','Feed targets need attention','One or more flock targets may be zero. Feed-cover calculations are unavailable until valid daily targets are entered.','Review each flock’s feeding reference and grams per bird per day.');
- if(totalDaily>0){
+ if(missingFeedTargets.length)add('warning','Feed targets need attention','Daily feed targets are missing or zero for: '+missingFeedTargets.map(x=>x.name).join(', ')+'. Farm-wide feed projections are incomplete until every active flock has a valid target.','Review each listed flock’s feeding reference and grams per bird per day.');
+ else if(d.flocks.length&&totalDaily<=0)add('warning','Feed targets need attention','Feed-cover calculations are unavailable until valid daily targets are entered.','Review each flock’s feeding reference and grams per bird per day.');
+ if(projectionValid){
    if(available<=0)add('critical','Recorded feed stock is depleted','The feed ledger shows '+fmt(available)+' kg available against an estimated '+fmt(totalDaily)+' kg daily target. Check the physical store and ledger immediately.','Verify the stock count, then record any missing receipt or issue.');
    else if(cover<3)add('critical','Feed stock is critically low','Recorded stock covers about '+fmt(cover)+' days. At current targets, a 14-day planning quantity is '+fmt(Math.max(0,totalDaily*14-available))+' kg beyond recorded stock.','Verify the physical stock and arrange replenishment before it runs out.');
    else if(cover<7)add('warning','Plan the next feed purchase','Recorded stock covers about '+fmt(cover)+' days. A 14-day planning quantity would require about '+fmt(Math.max(0,totalDaily*14-available))+' kg more than current recorded stock.','Check supplier lead time, feed type and cash availability before ordering.');
@@ -136,7 +137,7 @@ function renderInsights(){
  $('insightList').innerHTML=items.map(x=>'<article class="insight '+(x.priority==='critical'?'warning':x.priority)+'"><h3>'+esc(x.title)+'</h3><p>'+esc(x.detail)+'</p><p><b>Suggested next step:</b> '+esc(x.action)+'</p></article>').join('');
  // Decision-support snapshot: projections are calculated only from farmer-entered records.
  const addDays=(base,n)=>{const v=new Date(base+'T00:00:00');v.setDate(v.getDate()+n);return [v.getFullYear(),String(v.getMonth()+1).padStart(2,'0'),String(v.getDate()).padStart(2,'0')].join('-')};
- const target14=totalDaily*14,orderGap=Math.max(0,target14-available),stockOut=totalDaily>0&&available>=0?addDays(todayDate,Math.ceil(cover)):'';
+ const target14=totalDaily*14,orderGap=Math.max(0,target14-available),stockOut=projectionValid&&available>=0?addDays(todayDate,Math.ceil(cover)):'';
  const periodStart=addDays(todayDate,-6),previousStart=addDays(todayDate,-13),previousEnd=addDays(todayDate,-7);
  const popAt=(flock,day)=>Math.max(0,Number(flock.initial)+d.records.filter(r=>r.flock===flock.id&&r.date<day&&['mortality','addition','removal'].includes(r.type)).reduce((sum,r)=>sum+(r.type==='addition'?Number(r.qty):-Number(r.qty)),0));
  const deathsBetween=(start,end)=>d.records.filter(r=>r.type==='mortality'&&r.date>=start&&r.date<=end).reduce((sum,r)=>sum+Number(r.qty||0),0);
@@ -150,15 +151,15 @@ function renderInsights(){
  const categoryTotals={};d.finance.filter(x=>x.type==='expense').forEach(x=>{const k=x.category||'Other';categoryTotals[k]=(categoryTotals[k]||0)+Number(x.amount||0)});
  const categories=Object.entries(categoryTotals).sort((x,y)=>y[1]-x[1]).slice(0,4);
  $('intelligenceSummary').innerHTML=
-   '<article><small>Estimated feed cover</small><b>'+ (totalDaily>0?fmt(cover)+' days':'Not available')+'</b><p>'+(totalDaily>0?'At '+fmt(totalDaily)+' kg/day target':'Set valid targets for every flock')+'</p></article>'+
-   '<article><small>14-day feed purchase gap</small><b>'+(totalDaily>0?fmt(orderGap)+' kg':'Not available')+'</b><p>Target '+fmt(target14)+' kg · Stock '+fmt(available)+' kg</p></article>'+
+   '<article><small>Estimated feed cover</small><b>'+ (projectionValid?fmt(cover)+' days':'Not available')+'</b><p>'+(totalDaily>0?'At '+fmt(totalDaily)+' kg/day target':'Set valid targets for every flock')+'</p></article>'+
+   '<article><small>14-day feed purchase gap</small><b>'+(projectionValid?fmt(orderGap)+' kg':'Not available')+'</b><p>Target '+fmt(target14)+' kg · Stock '+fmt(available)+' kg</p></article>'+
    '<article><small>Mortality · last 7 days</small><b>'+fmt(recentDeaths)+' birds</b><p>'+(recentRate===null?'Rate unavailable':fmt(recentRate)+'% of estimated starting population')+'</p></article>'+
    '<article><small>Recorded net cash balance</small><b>'+esc(money)+' '+fmt(incomes-expenses)+'</b><p>Income '+fmt(incomes)+' · Expenses '+fmt(expenses)+'</p></article>';
  let mortalityTrend='No mortality records in either comparison period.';
  if(recentDeaths||previousDeaths){
    if(recentRate!==null&&previousRate!==null){
      const diff=recentRate-previousRate;
-     mortalityTrend='Last 7 days: '+fmt(recentDeaths)+' deaths ('+fmt(recentRate)+'%). Previous 7 days: '+fmt(previousDeaths)+' deaths ('+fmt(previousRate)+'%). '+(diff>0?'Recorded mortality rate increased by ':diff<0?'Recorded mortality rate decreased by ':'Recorded mortality rate was unchanged at ')+(diff===0?fmt(recentRate)+' percentage points.':fmt(Math.abs(diff))+' percentage points.');
+     mortalityTrend='Last 7 days: '+fmt(recentDeaths)+' deaths ('+fmt(recentRate)+'%). Previous 7 days: '+fmt(previousDeaths)+' deaths ('+fmt(previousRate)+'%). '+(diff>0?'Recorded mortality rate increased by ':diff<0?'Recorded mortality rate decreased by ':'Recorded mortality rate was unchanged at ')+(diff===0?fmt(recentRate)+'%.':fmt(Math.abs(diff))+' percentage points.');
    }else mortalityTrend='Last 7 days: '+fmt(recentDeaths)+' deaths. Previous 7 days: '+fmt(previousDeaths)+'. A rate comparison is unavailable because the estimated starting population could not be calculated.';
  }
  const categoryMarkup=categories.length?'<ul>'+categories.map(x=>'<li>'+esc(x[0])+': '+esc(money)+' '+fmt(x[1])+'</li>').join('')+'</ul>':'<p>No expense categories recorded yet.</p>';
