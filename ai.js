@@ -53,6 +53,16 @@ document.addEventListener('DOMContentLoaded',()=>{
  $('aiClear').addEventListener('click',()=>{history=[];$('aiMessages').replaceChildren();append('assistant','Conversation cleared. Ask me about your farm whenever you are ready.');status('Conversation is held only in this page session.');});
  document.addEventListener('click',e=>{const b=e.target.closest('[data-ai-prompt]');if(b)send(b.dataset.aiPrompt)});
  $('photo').addEventListener('change',()=>{$('aiPhotoEstimate').disabled=!$('photo').files?.length;$('aiPhotoResult').textContent=$('photo').files?.length?'Photo ready. Request an AI estimate when you are ready.':'No photo selected.'});
+ $('aiTestConnection').addEventListener('click',async()=>{
+  const out=$('aiConnectionStatus'),button=$('aiTestConnection');let endpoint=$('aiEndpoint').value.trim();
+  if(!endpoint){out.textContent='Enter the Worker HTTPS URL first.';return;}
+  try{const u=new URL(endpoint);if(u.protocol!=='https:')throw new Error('The Worker URL must use HTTPS.');button.disabled=true;out.textContent='Checking secure backend…';
+   const r=await fetch(u.toString(),{method:'GET'}),data=await r.json().catch(()=>({}));
+   if(!r.ok||!data.ok)throw new Error(data.error||('HTTP '+r.status));
+   out.textContent=data.configured?'Backend is reachable and both required secrets are configured. You can now send a test question.':'Backend is reachable, but required Worker secrets are missing.';
+  }catch(e){out.textContent='Connection test failed: '+e.message;}finally{button.disabled=false;}
+ });
+
  $('clearPhoto').addEventListener('click',()=>{$('aiPhotoEstimate').disabled=true;$('aiPhotoResult').textContent='No photo selected.'});
  $('aiPhotoEstimate').addEventListener('click',async()=>{
   const file=$('photo').files?.[0];if(!file)return;
