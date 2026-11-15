@@ -134,6 +134,38 @@ function renderInsights(){
  const order={critical:0,warning:1,info:2,success:3};
  items.sort((a,b)=>order[a.priority]-order[b.priority]);
  $('insightList').innerHTML=items.map(x=>'<article class="insight '+(x.priority==='critical'?'warning':x.priority)+'"><h3>'+esc(x.title)+'</h3><p>'+esc(x.detail)+'</p><p><b>Suggested next step:</b> '+esc(x.action)+'</p></article>').join('');
+ // Decision-support snapshot: projections are calculated only from farmer-entered records.
+ const addDays=(base,n)=>{const v=new Date(base+'T00:00:00');v.setDate(v.getDate()+n);return [v.getFullYear(),String(v.getMonth()+1).padStart(2,'0'),String(v.getDate()).padStart(2,'0')].join('-')};
+ const target14=totalDaily*14,orderGap=Math.max(0,target14-available),stockOut=totalDaily>0&&available>=0?addDays(todayDate,Math.ceil(cover)):'';
+ const periodStart=addDays(todayDate,-6),previousStart=addDays(todayDate,-13),previousEnd=addDays(todayDate,-7);
+ const popAt=(flock,day)=>Math.max(0,Number(flock.initial)+d.records.filter(r=>r.flock===flock.id&&r.date<day&&['mortality','addition','removal'].includes(r.type)).reduce((sum,r)=>sum+(r.type==='addition'?Number(r.qty):-Number(r.qty)),0));
+ const deathsBetween=(start,end)=>d.records.filter(r=>r.type==='mortality'&&r.date>=start&&r.date<=end).reduce((sum,r)=>sum+Number(r.qty||0),0);
+ const recentDeaths=deathsBetween(periodStart,todayDate),previousDeaths=deathsBetween(previousStart,previousEnd);
+ let mortalityStartPopulation=0,previousStartPopulation=0;
+ d.flocks.forEach(fl=>{mortalityStartPopulation+=popAt(fl,periodStart);previousStartPopulation+=popAt(fl,previousStart)});
+ const recentRate=mortalityStartPopulation>0?recentDeaths/mortalityStartPopulation*100:null;
+ const previousRate=previousStartPopulation>0?previousDeaths/previousStartPopulation*100:null;
+ const incomes=d.finance.filter(x=>x.type==='income').reduce((sum,x)=>sum+Number(x.amount||0),0);
+ const expenses=d.finance.filter(x=>x.type==='expense').reduce((sum,x)=>sum+Number(x.amount||0),0);
+ const categoryTotals={};d.finance.filter(x=>x.type==='expense').forEach(x=>{const k=x.category||'Other';categoryTotals[k]=(categoryTotals[k]||0)+Number(x.amount||0)});
+ const categories=Object.entries(categoryTotals).sort((x,y)=>y[1]-x[1]).slice(0,4);
+ $('intelligenceSummary').innerHTML=
+   '<article><small>Estimated feed cover</small><b>'+ (totalDaily>0?fmt(cover)+' days':'Not available')+'</b><p>'+(totalDaily>0?'At '+fmt(totalDaily)+' kg/day target':'Set valid targets for every flock')+'</p></article>'+
+   '<article><small>14-day feed purchase gap</small><b>'+(totalDaily>0?fmt(orderGap)+' kg':'Not available')+'</b><p>Target '+fmt(target14)+' kg · Stock '+fmt(available)+' kg</p></article>'+
+   '<article><small>Mortality · last 7 days</small><b>'+fmt(recentDeaths)+' birds</b><p>'+(recentRate===null?'Rate unavailable':fmt(recentRate)+'% of estimated starting population')+'</p></article>'+
+   '<article><small>Recorded net cash balance</small><b>'+esc(money)+' '+fmt(incomes-expenses)+'</b><p>Income '+fmt(incomes)+' · Expenses '+fmt(expenses)+'</p></article>';
+ let mortalityTrend='No mortality records in either comparison period.';
+ if(recentDeaths||previousDeaths){
+   if(recentRate!==null&&previousRate!==null){
+     const diff=recentRate-previousRate;
+     mortalityTrend='Last 7 days: '+fmt(recentDeaths)+' deaths ('+fmt(recentRate)+'%). Previous 7 days: '+fmt(previousDeaths)+' deaths ('+fmt(previousRate)+'%). '+(diff>0?'Recorded mortality rate increased by ':diff<0?'Recorded mortality rate decreased by ':'Recorded mortality rate was unchanged at ')+(diff===0?fmt(recentRate)+' percentage points.':fmt(Math.abs(diff))+' percentage points.');
+   }else mortalityTrend='Last 7 days: '+fmt(recentDeaths)+' deaths. Previous 7 days: '+fmt(previousDeaths)+'. A rate comparison is unavailable because the estimated starting population could not be calculated.';
+ }
+ const categoryMarkup=categories.length?'<ul>'+categories.map(x=>'<li>'+esc(x[0])+': '+esc(money)+' '+fmt(x[1])+'</li>').join('')+'</ul>':'<p>No expense categories recorded yet.</p>';
+ $('intelligenceDetails').innerHTML=
+   '<article><h3>Feed purchasing outlook</h3><p>Daily target: <b>'+fmt(totalDaily)+' kg</b>. Current recorded stock: <b>'+fmt(available)+' kg</b>.</p><p>Estimated stock-out: <b>'+(stockOut?date(stockOut):'Unavailable')+'</b> if targets and stock movements remain unchanged.</p><p>For a 14-day planning horizon, the estimated additional quantity is <b>'+fmt(orderGap)+' kg</b>. Confirm physical stock, feed type, supplier lead time and available cash before ordering.</p></article>'+
+   '<article><h3>Mortality comparison</h3><p>'+esc(mortalityTrend)+'</p><p class="hint">Rates use estimated flock population at the start of each period, reconstructed from dated additions, deaths and removals. Missing or inaccurate entries affect the result. This is monitoring, not diagnosis.</p></article>'+
+   '<article><h3>Financial overview</h3><p>Recorded income: <b>'+esc(money)+' '+fmt(incomes)+'</b> · Expenses: <b>'+esc(money)+' '+fmt(expenses)+'</b> · Net cash balance: <b>'+esc(money)+' '+fmt(incomes-expenses)+'</b>.</p><p>Largest expense categories:</p>'+categoryMarkup+'<p class="hint">This is based only on entered transactions. It excludes unrecorded costs, assets, debts, opening balances and formal accounting adjustments.</p></article>';
 }
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
 async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);page(document.getElementById(h)?.classList.contains('page')?h:'dashboard');if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
