@@ -8,3 +8,7 @@
 }
 
 .insight{border-left:4px solid #6b9878}.insight.warning{border-left-color:#c48a30}.insight.success{border-left-color:#2f8a56}.insight h3{margin-bottom:5px}.insight p{margin:0}.page .stats{margin-top:10px}
+
+/* Farm intelligence decision-support dashboard */
+.intelligence-stats{margin-top:14px}.intelligence-stats article{min-width:0}.intelligence-stats article b{font-size:20px;overflow-wrap:anywhere}.intelligence-stats article p{margin:7px 0 0;font-size:10px}.intelligence-details article{min-width:0}.intelligence-details p{margin:6px 0}.intelligence-details ul{padding-left:18px;color:var(--muted);font-size:11px;line-height:1.8}.insight-heading{margin:20px 0 10px}
+@media(max-width:700px){.intelligence-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.intelligence-stats article b{font-size:17px}.intelligence-details{grid-template-columns:1fr}}
