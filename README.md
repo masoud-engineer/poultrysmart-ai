@@ -33,3 +33,11 @@ Feed target is a calculated estimate based on the grams-per-bird value entered b
 
 ## Technology
 Vanilla HTML, CSS and JavaScript; IndexedDB with localStorage fallback; PWA manifest and service worker. No external JavaScript library is required.
+
+
+## Advanced feeding reference (v2 foundation)
+- Local calendar dates are generated in the device timezone rather than UTC.
+- Optional Ross 308 / Ross 308 FF as-hatched daily feed-intake reference (Aviagen 2022, days 1–56) can be selected per flock. The reference is a performance objective, not a guaranteed intake; manual targets remain available.
+- Additional data collections are reserved in the offline data model for future growth, health-plan, egg-production and financial modules. These modules are not yet exposed as finished workflows.
+
+Reference: [Aviagen Ross 308 / 308 FF Broiler Performance Objectives (2022)](https://ap.aviagen.com/assets/Tech_Center/Ross_Broiler/RossxRoss308-BroilerPerformanceObjectives2022-EN.pdf). The as-hatched table reports daily feed intake per living bird; local conditions can produce different results.
