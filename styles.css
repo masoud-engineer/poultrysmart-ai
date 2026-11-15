@@ -6,3 +6,5 @@
   body.nav-open #navBackdrop{display:block}
   aside#nav{z-index:5}
 }
+
+.insight{border-left:4px solid #6b9878}.insight.warning{border-left-color:#c48a30}.insight.success{border-left-color:#2f8a56}.insight h3{margin-bottom:5px}.insight p{margin:0}.page .stats{margin-top:10px}
