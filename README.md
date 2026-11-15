@@ -41,3 +41,13 @@ Vanilla HTML, CSS and JavaScript; IndexedDB with localStorage fallback; PWA mani
 - Additional data collections are reserved in the offline data model for future growth, health-plan, egg-production and financial modules. These modules are not yet exposed as finished workflows.
 
 Reference: [Aviagen Ross 308 / 308 FF Broiler Performance Objectives (2022)](https://ap.aviagen.com/assets/Tech_Center/Ross_Broiler/RossxRoss308-BroilerPerformanceObjectives2022-EN.pdf). The as-hatched table reports daily feed intake per living bird; local conditions can produce different results.
+
+
+## Expanded farm modules
+- Growth records: flock, date, sample size and average body weight. Average daily gain compares the latest two samples for the same flock.
+- Health planner: farmer-entered vaccination, treatment and veterinary tasks with due/overdue status and completion tracking. It does not diagnose or prescribe.
+- Layer egg collection: good and damaged egg counts, plus a simple hen-day rate based on live flock population.
+- Farm cash ledger: income, expenses, category and date, with net cash balance in the selected farm currency.
+- On-device farm insights: transparent rule-based prompts using recorded feed cover, mortality entries, health due dates, growth records, layer egg records and financial activity. No farm data is sent to an external AI service; this is not a generative AI veterinarian or predictive model.
+
+All added records are included in JSON backups. Existing records are retained when the app is updated.
