@@ -70,21 +70,70 @@ function renderExtended(){
  renderInsights();
 }
 function renderInsights(){
- const items=[],cover=daily()?stock()/daily():Infinity;
- if(!d.flocks.length)items.push(['Getting started','Create a flock to unlock flock-level monitoring.','info']);
- if(d.flocks.length&&cover<3)items.push(['Feed stock is running low','Recorded stock covers about '+fmt(cover)+' days at current targets. Review your next feed purchase.','warning']);
- else if(d.flocks.length&&cover!==Infinity)items.push(['Feed stock outlook','Recorded stock covers about '+fmt(cover)+' days at current targets.','info']);
- const cutoff=new Date(today()+'T00:00:00');cutoff.setDate(cutoff.getDate()-6);const since=[cutoff.getFullYear(),String(cutoff.getMonth()+1).padStart(2,'0'),String(cutoff.getDate()).padStart(2,'0')].join('-');
- for(const x of d.flocks){const deaths=d.records.filter(r=>r.flock===x.id&&r.type==='mortality'&&r.date>=since).reduce((s,r)=>s+Number(r.qty),0);if(deaths)items.push(['Mortality recorded: '+esc(x.name),deaths+' bird(s) recorded in the last 7 days. Review the records and consult a veterinarian if mortality is unusual.','warning']);}
- const overdue=d.healthPlans.filter(x=>x.status!=='done'&&x.due<today()).length,soon=d.healthPlans.filter(x=>x.status!=='done'&&x.due===today()).length;
- if(overdue)items.push(['Health tasks overdue',overdue+' planned task(s) are past due. Check the schedule and confirm with your veterinarian.','warning']);
- if(soon)items.push(['Health tasks due today',soon+' task(s) are scheduled for today.','info']);
- if(d.flocks.some(x=>x.type==='Layer')&&!d.eggs.length)items.push(['Egg records missing','You have a layer flock but no egg collections recorded. Add daily collections to calculate laying rate.','info']);
- if(d.flocks.length&&!d.weights.length)items.push(['Growth monitoring not started','Record a representative sample weight to establish a baseline. Repeat sampling consistently.','info']);
- if(d.weights.length>1){const a=d.weights.slice().sort((x,y)=>y.date.localeCompare(x.date))[0],b=d.weights.filter(x=>x.flock===a.flock&&x.date<a.date).sort((x,y)=>y.date.localeCompare(x.date))[0];if(b&&a.avg<b.avg)items.push(['Average weight decreased',(f(a.flock)?.name||'A flock')+' has a lower latest sample average than its previous sample. Check sample size, weighing method, feed and flock condition.','warning']);}
- if(!d.finance.length)items.push(['Financial tracking not started','Record feed purchases, medicine costs, labour and sales to estimate operating balance.','info']);
- if(!items.length)items.push(['No rule-based alerts right now','Keep records current. New insights appear as more data is entered.','success']);
- $('insightList').innerHTML=items.map(x=>'<article class="insight '+x[2]+'"><h3>'+x[0]+'</h3><p>'+x[1]+'</p></article>').join('');
+ const items=[];
+ const add=(priority,title,detail,action)=>items.push({priority,title,detail,action});
+ const totalDaily=daily(),available=stock(),cover=totalDaily>0?available/totalDaily:Infinity;
+ const money=d.settings.currency||'TZS';
+ if(!d.flocks.length)add('info','Start with a flock','Create a flock and enter its start date, bird count and feeding target to activate farm monitoring.','Open Flock management and create your first flock.');
+ if(d.flocks.length&&totalDaily<=0)add('warning','Feed targets need attention','One or more flock targets may be zero. Feed-cover calculations are unavailable until valid daily targets are entered.','Review each flock’s feeding reference and grams per bird per day.');
+ if(totalDaily>0){
+   if(available<=0)add('critical','Recorded feed stock is depleted','The feed ledger shows '+fmt(available)+' kg available against an estimated '+fmt(totalDaily)+' kg daily target. Check the physical store and ledger immediately.','Verify the stock count, then record any missing receipt or issue.');
+   else if(cover<3)add('critical','Feed stock is critically low','Recorded stock covers about '+fmt(cover)+' days. At current targets, a 14-day planning quantity is '+fmt(Math.max(0,totalDaily*14-available))+' kg beyond recorded stock.','Verify the physical stock and arrange replenishment before it runs out.');
+   else if(cover<7)add('warning','Plan the next feed purchase','Recorded stock covers about '+fmt(cover)+' days. A 14-day planning quantity would require about '+fmt(Math.max(0,totalDaily*14-available))+' kg more than current recorded stock.','Check supplier lead time, feed type and cash availability before ordering.');
+   else add('success','Feed stock outlook','Recorded stock covers about '+fmt(cover)+' days at current targets. This is a ledger-based estimate, not a guarantee of actual consumption.','Keep feed receipts, issues and flock targets up to date.');
+ }
+ const todayDate=today(),cutoff=new Date(todayDate+'T00:00:00');cutoff.setDate(cutoff.getDate()-6);
+ const since=[cutoff.getFullYear(),String(cutoff.getMonth()+1).padStart(2,'0'),String(cutoff.getDate()).padStart(2,'0')].join('-');
+ for(const flock of d.flocks){
+   const deaths=d.records.filter(x=>x.flock===flock.id&&x.type==='mortality'&&x.date>=since&&x.date<=todayDate).reduce((s,x)=>s+Number(x.qty||0),0);
+   if(deaths)add('warning','Mortality needs review: '+flock.name,deaths+' bird(s) were recorded as mortality in the last 7 days. This alert does not identify a cause.','Check the affected birds and records; contact a qualified veterinarian if deaths are unusual or continue.');
+ }
+ const openTasks=d.healthPlans.filter(x=>x.status!=='done');
+ const overdue=openTasks.filter(x=>x.due<todayDate),dueToday=openTasks.filter(x=>x.due===todayDate),nextWeek=openTasks.filter(x=>x.due>todayDate&&dayDiff(todayDate,x.due)<=7);
+ if(overdue.length)add('critical','Health tasks are overdue',overdue.length+' task(s) are past due: '+overdue.slice(0,3).map(x=>x.name).join(', ')+'.','Review the health planner and confirm the correct action and timing with your veterinarian.');
+ if(dueToday.length)add('warning','Health tasks due today',dueToday.length+' task(s) are scheduled for today: '+dueToday.slice(0,3).map(x=>x.name).join(', ')+'.','Open the Health planner and mark a task complete only after it has actually been done.');
+ if(nextWeek.length)add('info','Health tasks coming up',nextWeek.length+' task(s) are due in the next 7 days: '+nextWeek.slice(0,3).map(x=>x.name).join(', ')+'.','Prepare supplies and confirm schedules with your veterinarian.');
+ const layers=d.flocks.filter(x=>x.type==='Layer');
+ if(layers.length){
+   const missing=layers.filter(x=>!d.eggs.some(e=>e.flock===x.id));
+   if(missing.length)add('info','Egg records missing',missing.map(x=>x.name).join(', ')+' has no egg collection recorded.','Record daily good and damaged egg totals to establish a production baseline.');
+   for(const flock of layers){
+     const recent=d.eggs.filter(x=>x.flock===flock.id&&x.date>=since&&x.date<=todayDate).reduce((s,x)=>s+Number(x.good||0),0);
+     const prevStart=new Date(todayDate+'T00:00:00');prevStart.setDate(prevStart.getDate()-13);
+     const prevEnd=new Date(todayDate+'T00:00:00');prevEnd.setDate(prevEnd.getDate()-7);
+     const iso=v=>[v.getFullYear(),String(v.getMonth()+1).padStart(2,'0'),String(v.getDate()).padStart(2,'0')].join('-');
+     const previous=d.eggs.filter(x=>x.flock===flock.id&&x.date>=iso(prevStart)&&x.date<=iso(prevEnd)).reduce((s,x)=>s+Number(x.good||0),0);
+     if(recent>0&&previous>0){
+       const change=(recent-previous)/previous*100;
+       if(change<=-10)add('warning','Egg collection has fallen: '+flock.name,'Good eggs recorded in the last 7 days are down '+fmt(Math.abs(change))+'% compared with the previous 7 days ('+fmt(recent)+' vs '+fmt(previous)+'). Check that both periods have complete daily records.','Review collection records, feed and water availability, flock condition and environmental changes; seek veterinary advice if health concerns appear.');
+       else if(change>=10)add('success','Egg collection has increased: '+flock.name,'Good eggs recorded in the last 7 days are up '+fmt(change)+'% compared with the previous 7 days.','Confirm records are complete and continue monitoring.');
+     }
+   }
+ }
+ if(d.flocks.length&&!d.weights.length)add('info','Growth monitoring not started','No flock weight samples have been recorded yet.','Weigh a representative sample consistently and record the sample size and average weight.');
+ for(const flock of d.flocks){
+   const samples=d.weights.filter(x=>x.flock===flock.id).sort((a,b)=>a.date.localeCompare(b.date));
+   if(samples.length>=2){
+     const a=samples[samples.length-1],b=samples[samples.length-2],days=dayDiff(b.date,a.date);
+     if(days>0){
+       const gain=(a.avg-b.avg)/days;
+       if(a.avg<b.avg)add('warning','Average sample weight decreased: '+flock.name,'Latest sample is '+fmt(Math.abs(a.avg-b.avg))+' g lighter on average than the previous sample. Check that sample sizes and weighing methods are comparable.','Repeat a representative weighing and review feed access, water and flock condition.');
+       else add('info','Growth trend: '+flock.name,'Average sample weight changed from '+fmt(b.avg)+' g to '+fmt(a.avg)+' g over '+days+' day(s), about '+fmt(gain)+' g/day. Compare with a verified breed and age target.','Continue weighing comparable samples at consistent intervals.');
+     }
+   }
+ }
+ if(d.finance.length){
+   const expenses=d.finance.filter(x=>x.type==='expense');
+   const byCategory={};expenses.forEach(x=>byCategory[x.category||'Other']=(byCategory[x.category||'Other']||0)+Number(x.amount||0));
+   const largest=Object.entries(byCategory).sort((a,b)=>b[1]-a[1])[0];
+   if(largest)add('info','Largest recorded expense category',largest[0]+' accounts for '+money+' '+fmt(largest[1])+' of recorded expenses ('+fmt(expenses.reduce((s,x)=>s+Number(x.amount||0),0))+' total). This is based only on transactions entered.','Check whether all purchases and operating costs have been recorded before drawing conclusions about profitability.');
+   const inc=d.finance.filter(x=>x.type==='income').reduce((s,x)=>s+Number(x.amount||0),0),out=expenses.reduce((s,x)=>s+Number(x.amount||0),0);
+   if(out>inc)add('warning','Recorded expenses exceed recorded income','The ledger currently shows '+money+' '+fmt(out-inc)+' more expenses than income. This is a cash-record comparison, not a complete profit calculation.','Check for missing sales, purchases, opening balances and transactions before making financial decisions.');
+ }else if(d.flocks.length)add('info','Financial tracking not started','No income or expense transactions have been entered.','Record feed, chicks, veterinary, labour and sales transactions to build a useful farm cash summary.');
+ if(!items.length)add('success','No priority alerts right now','No rule-based issues were detected from the records currently available. Missing or inaccurate entries can hide problems.','Keep daily records current and review the dashboard regularly.');
+ const order={critical:0,warning:1,info:2,success:3};
+ items.sort((a,b)=>order[a.priority]-order[b.priority]);
+ $('insightList').innerHTML=items.map(x=>'<article class="insight '+(x.priority==='critical'?'warning':x.priority)+'"><h3>'+esc(x.title)+'</h3><p>'+esc(x.detail)+'</p><p><b>Suggested next step:</b> '+esc(x.action)+'</p></article>').join('');
 }
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
 async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);page(document.getElementById(h)?.classList.contains('page')?h:'dashboard');if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
