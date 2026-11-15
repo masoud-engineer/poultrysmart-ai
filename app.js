@@ -32,4 +32,4 @@ $('navBackdrop').addEventListener('pointerdown',closeNav);
 $('navBackdrop').addEventListener('click',closeNav);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav()});
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
-async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);if(h)page(h);if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
+async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);page(document.getElementById(h)?.classList.contains('page')?h:'dashboard');if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
