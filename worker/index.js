@@ -17,7 +17,7 @@ export default {
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:cors(origin)});
   if(request.method==="GET")return json({ok:true,service:"PoultrySmart AI backend",configured:Boolean(env.OPENAI_API_KEY&&env.AI_ACCESS_CODE)},200,origin);
   if(request.method!=="POST")return json({error:"Method not allowed."},405,origin);
-  if(!env.OPENAI_API_KEY||!env.AI_ACCESS_CODE)return json({error:"The AI backend is not configured. Add the required Worker secrets."},503,origin);
+  if(!env.OPENAI_API_KEY||!env.AI_ACCESS_CODE||env.AI_ACCESS_CODE.length<20)return json({error:"The AI backend is not configured. Add the API key and an access code of at least 20 characters."},503,origin);
   const supplied=request.headers.get("X-App-Access")||"";
   if(supplied.length!==env.AI_ACCESS_CODE.length||supplied!==env.AI_ACCESS_CODE)return json({error:"The AI access code is incorrect."},401,origin);
   let body;try{body=await request.json()}catch{return json({error:"Request body must be valid JSON."},400,origin);}
