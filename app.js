@@ -27,9 +27,16 @@ $('reset').onclick=async()=>{if(confirm('Delete all local farm data?')&&confirm(
 $('menu').setAttribute('aria-controls','nav');$('menu').setAttribute('aria-expanded','false');$('menu').setAttribute('aria-label','Open navigation menu');
 function closeNav(){$('nav').classList.remove('open');document.body.classList.remove('nav-open');$('menu').setAttribute('aria-expanded','false');$('menu').setAttribute('aria-label','Open navigation menu')}
 $('menu').onclick=()=>{let opening=!$('nav').classList.contains('open');$('nav').classList.toggle('open',opening);document.body.classList.toggle('nav-open',opening);$('menu').setAttribute('aria-expanded',String(opening));$('menu').setAttribute('aria-label',opening?'Close navigation menu':'Open navigation menu')};
-// The backdrop is a real hit target above the page and below the drawer.
-$('navBackdrop').addEventListener('pointerdown',closeNav);
-$('navBackdrop').addEventListener('click',closeNav);
+// Close immediately on touch or pointer input anywhere outside the drawer.
+function dismissFromOutside(e){
+  const drawer=$('nav'),button=$('menu');
+  if(drawer.classList.contains('open')&&!drawer.contains(e.target)&&!button.contains(e.target))closeNav();
+}
+$('navBackdrop').onclick=closeNav;
+$('navBackdrop').ontouchstart=closeNav;
+$('navBackdrop').onpointerdown=closeNav;
+document.addEventListener('touchstart',dismissFromOutside,{capture:true,passive:true});
+document.addEventListener('pointerdown',dismissFromOutside,true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeNav()});
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
 async function init(){['start','feedDate','rdate'].forEach(id=>$(id).value=today());await load();render();net();let h=location.hash.slice(1);page(document.getElementById(h)?.classList.contains('page')?h:'dashboard');if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').catch(console.warn)}document.addEventListener('DOMContentLoaded',init)})();
