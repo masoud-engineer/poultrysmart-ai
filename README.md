@@ -54,3 +54,22 @@ All added records are included in JSON backups. Existing records are retained wh
 
 - The ChickenVerse research dataset is not bundled. Its published CC BY-NC-SA 4.0 licence is non-commercial; obtain separate permission or use a commercially cleared dataset before training or distributing a commercial chicken detector.
 - A generative AI assistant and camera-based AI detection are not included in this static release. They require a secure backend or a properly licensed, trained and optimized on-device model. Never put private model API keys in public frontend code.
+
+
+## Genuine AI assistant and optional photo estimate (secure backend)
+- The AI assistant uses the OpenAI Responses API through a separate Cloudflare Worker. The browser never receives the OpenAI API key.
+- The user explicitly sends each question; a limited farm-data summary and recent conversation are sent only for that request. A photo is sent only when the user explicitly requests an AI photo estimate.
+- GPT-6 Luna is the default cost-efficient model and supports image input. AI photo estimates are approximate visual opinions, not dependable object detection or a replacement for manual counting. They never change flock population.
+- The AI assistant is not a veterinarian, nutritionist or accountant. It must identify uncertainty, avoid disease diagnosis or medication dosing, and distinguish recorded data from assumptions.
+- The OpenAI API is billed separately from a ChatGPT subscription. Create an OpenAI API project key and add it as a Cloudflare Worker secret named `OPENAI_API_KEY`. Also set `AI_ACCESS_CODE` as a separate private access code secret. Never put either secret in this GitHub repository or in the browser.
+- Deploy the Worker, then enter its HTTPS URL and the same AI access code in the app's Settings. Configure the Worker allowed origin to `https://masoud-engineer.github.io`.
+- AI conversations are held only in the current page session; they are not stored in farm records or cloud history. Local farm data remains on the device unless explicitly sent with an AI request.
+
+### Deploy the AI Worker
+1. Create a Cloudflare account and open **Workers & Pages** → **Create** → **Worker**.
+2. Name it `poultrysmart-ai-api`. In the Worker editor, replace the starter code with `worker/index.js` from this repository and deploy.
+3. Open the Worker **Settings → Variables and Secrets**. Add secrets `OPENAI_API_KEY` (your OpenAI project API key) and `AI_ACCESS_CODE` (a new private passphrase you create). Add text variables `OPENAI_MODEL=gpt-6-luna` and `ALLOWED_ORIGINS=https://masoud-engineer.github.io`.
+4. Copy the Worker `workers.dev` HTTPS URL into PoultrySmart AI → Settings → Secure AI connection. Enter the same private access code and save the farm profile.
+5. Test a simple question first. Keep API usage limits/budget controls enabled in your OpenAI project. Do not share the access code.
+
+For command-line deployment, use Wrangler from the `worker` directory: `npx wrangler secret put OPENAI_API_KEY`, `npx wrangler secret put AI_ACCESS_CODE`, then `npx wrangler deploy`. The secret values are entered interactively and must not be committed.
