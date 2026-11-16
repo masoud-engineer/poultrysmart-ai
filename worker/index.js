@@ -23,7 +23,7 @@ export default {
   let body;try{body=await request.json()}catch{return json({error:"Request body must be valid JSON."},400,origin);}
   if(JSON.stringify(body).length>5_000_000)return json({error:"Request is too large."},413,origin);
   const model=env.OPENAI_MODEL||"gpt-6-luna";
-  let input,maxOutput=900;
+  let input,maxOutput=1600;
   if(body.mode==="chat"){
    const message=String(body.message||"").trim(),context=String(body.farmContext||"");
    if(!message||message.length>1200)return json({error:"Enter a question of 1,200 characters or fewer."},400,origin);
