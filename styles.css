@@ -33,3 +33,6 @@
 @media(max-width:800px){.ai-workspace{grid-template-columns:1fr}.ai-conversation-list{display:flex;max-height:none;overflow-x:auto;padding-bottom:4px}.ai-conversation-item{flex:0 0 190px}.ai-history-panel>.row{align-items:center}}
 
 .camera-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.camera-actions label{margin:0}.camera-actions .button{cursor:pointer}
+
+/* Saved camera validation history */
+.validation-history{margin-top:16px}.validation-history-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.validation-card{display:grid;grid-template-columns:minmax(100px,38%) 1fr;gap:12px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}.validation-photo img{display:block;width:100%;height:150px;object-fit:cover;border-radius:7px}.validation-details p{margin:7px 0;font-size:.9rem}.validation-details small{display:block;color:var(--muted);margin-top:3px}@media(max-width:420px){.validation-card{grid-template-columns:1fr}.validation-photo img{height:190px}}
