@@ -16,3 +16,18 @@
 /* AI assistant and optional vision estimate */
 .ai-chat-card{padding:14px}.ai-messages{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto;padding:8px 0 14px}.ai-message{max-width:92%;padding:11px 13px;border-radius:11px;background:#f0f5f1;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.ai-message.user{align-self:flex-end;background:#e5f1e8}.ai-message.assistant{align-self:flex-start}.ai-message p{margin:5px 0 0;color:var(--ink);font-size:12px;white-space:pre-wrap}.ai-message b{font-size:10px;color:var(--g)}.ai-form-actions{margin-top:9px}.ai-form-actions .hint{margin-right:auto}.ai-prompts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}.ai-prompts button{font-size:10px}.ai-photo-result{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;color:var(--ink);padding:10px;background:#f4f8f4;border-radius:8px}.ai-chat-card textarea{font-size:12px;line-height:1.5}
 @media(max-width:700px){.ai-message{max-width:100%}.ai-form-actions{align-items:center}.ai-prompts button{flex:1 1 45%}}
+
+/* Persistent AI conversation history */
+.ai-workspace{display:grid;grid-template-columns:minmax(210px,270px) minmax(0,1fr);gap:14px;align-items:start}
+.ai-history-panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;min-width:0}
+.ai-history-panel>.row{align-items:center}
+.ai-history-panel h3{margin:0;font-size:13px}
+.ai-history-panel>.hint{margin:8px 0 10px}
+.ai-conversation-list{display:grid;gap:6px;max-height:420px;overflow:auto}
+.ai-conversation-item{display:flex;gap:5px;align-items:center;min-width:0;padding:4px;border:1px solid transparent;border-radius:8px}
+.ai-conversation-item.active{background:var(--p);border-color:#dceade}
+.ai-conversation-open{background:transparent;color:var(--ink);font-weight:normal;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;padding:8px;font-size:11px}
+.ai-conversation-open:hover{background:#f3f7f3}
+.ai-conversation-delete{padding:6px 9px;flex:0 0 auto;font-size:14px}
+.ai-workspace .ai-chat-card{min-width:0}
+@media(max-width:800px){.ai-workspace{grid-template-columns:1fr}.ai-conversation-list{display:flex;max-height:none;overflow-x:auto;padding-bottom:4px}.ai-conversation-item{flex:0 0 190px}.ai-history-panel>.row{align-items:center}}
