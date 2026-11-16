@@ -19,6 +19,7 @@ async function callAI(payload){
  let data={};try{data=await r.json()}catch{}
  if(!r.ok)throw new Error(data.error||('AI backend returned HTTP '+r.status));
  if(!data.answer)throw new Error('The AI backend returned an empty response.');
+ if(payload.mode==='image'&&data.incomplete)throw new Error('The AI provider cut off its image analysis. Try a clearer or smaller photo; no incomplete estimate was saved.');
  return data.answer;
 }
 function openChatDB(){
