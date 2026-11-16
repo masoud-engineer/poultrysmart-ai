@@ -74,3 +74,7 @@ All added records are included in JSON backups. Existing records are retained wh
 5. Test a simple question first. Keep API usage limits/budget controls enabled in your OpenAI project. Do not share the access code.
 
 For command-line deployment, use Wrangler from the `worker` directory: `npx wrangler secret put OPENAI_API_KEY`, `npx wrangler secret put AI_ACCESS_CODE`, then `npx wrangler deploy`. The secret values are entered interactively and must not be committed.
+
+ 
+## Cloud sync pilot foundation
+Optional Supabase accounts and versioned cloud farm snapshots are available under Settings. Run the SQL migration in supabase/migrations/202611160001_cloud_sync.sql, configure the project URL and publishable/anon key, then create an account. Upload the current farm from the original phone; sign in on another phone and load the same cloud farm. Snapshot writes are revision-protected to prevent silent overwrites. The initial pilot has a 5 MB limit and does not sync AI conversations or camera photo previews. Keep JSON backups and avoid simultaneous edits on multiple devices until record-level conflict merging is added.
