@@ -119,7 +119,8 @@ async function send(raw){
  }catch(e){$('aiPending')?.remove();const node=document.createElement('div');node.className='ai-message assistant';node.textContent='I could not complete that request: '+e.message;$('aiMessages').append(node);status('Check the Worker URL, access code, internet connection and API setup. Your question remains saved.');}
  finally{busy=false;$('aiSend').disabled=false;$('aiQuestion').focus();}
 }
-function compressImage(file){
+let lastEstimate=null,lastImageData=null;
+ function compressImage(file){
  return new Promise(async(resolve,reject)=>{
   try{
    if(!file||!file.type.startsWith('image/'))throw new Error('Choose a valid image first.');
@@ -139,7 +140,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
  // Conversation rows attach their own open/delete handlers in renderConversationList().
  $('aiNewChat').addEventListener('click',newConversation);
  document.addEventListener('click',e=>{const b=e.target.closest('[data-ai-prompt]');if(b)send(b.dataset.aiPrompt)});
- $('photo').addEventListener('change',()=>{$('aiPhotoEstimate').disabled=!$('photo').files?.length;$('aiPhotoResult').textContent=$('photo').files?.length?'Photo ready. Request an AI estimate when you are ready.':'No photo selected.'});
+ const photoChanged=e=>{const file=e.target.files?.[0];if(!file)return;$('photo').value=e.target.id==='cameraPhoto'?'':$('photo').value;$('cameraPhoto').value=e.target.id==='photo'?'':$('cameraPhoto').value;$('aiPhotoEstimate').disabled=false;$('saveAIValidation').disabled=true;lastEstimate=null;lastImageData=null;window.PoultrySmart.previewCameraPhoto(file);$('aiPhotoResult').textContent='Photo ready. Request an AI estimate when you are ready.'};$('photo').addEventListener('change',photoChanged);$('cameraPhoto').addEventListener('change',photoChanged);
  $('aiTestConnection').addEventListener('click',async()=>{
   const out=$('aiConnectionStatus'),button=$('aiTestConnection');let endpoint=$('aiEndpoint').value.trim();
   if(!endpoint){out.textContent='Enter the Worker HTTPS URL first.';return;}
@@ -149,11 +150,11 @@ document.addEventListener('DOMContentLoaded',async()=>{
    out.textContent=data.configured?'Backend is reachable and both required secrets are configured. You can now send a test question.':'Backend is reachable, but required Worker secrets are missing.';
   }catch(e){out.textContent='Connection test failed: '+e.message;}finally{button.disabled=false;}
  });
- $('clearPhoto').addEventListener('click',()=>{$('aiPhotoEstimate').disabled=true;$('aiPhotoResult').textContent='No photo selected.'});
+ $('clearPhoto').addEventListener('click',()=>{$('aiPhotoEstimate').disabled=true;$('saveAIValidation').disabled=true;$('photo').value='';$('cameraPhoto').value='';lastEstimate=null;lastImageData=null;window.PoultrySmart.clearCameraPhoto();$('aiPhotoResult').textContent='No photo selected.'});
  $('aiPhotoEstimate').addEventListener('click',async()=>{
   const file=$('photo').files?.[0];if(!file)return;
   const button=$('aiPhotoEstimate');button.disabled=true;$('aiPhotoResult').textContent='Preparing the photo for visual analysis…';
-  try{const image=await compressImage(file);if(String(image).length>4_000_000)throw new Error('The photo is too large after compression. Try a smaller image.');$('aiPhotoResult').textContent=await callAI({mode:'image',image,flockContext:window.PoultrySmart.getCameraFlock()});}
+  try{const image=await compressImage(file);if(String(image).length>4_000_000)throw new Error('The photo is too large after compression. Try a smaller image.');lastImageData=image;lastEstimate=await callAI({mode:'image',image,flockContext:window.PoultrySmart.getCameraFlock()});$('aiPhotoResult').textContent=lastEstimate;$('saveAIValidation').disabled=false;}
   catch(e){$('aiPhotoResult').textContent='AI photo estimate unavailable: '+e.message;}
   finally{button.disabled=false;}
  });
