@@ -23,7 +23,7 @@ export default {
   let body;try{body=await request.json()}catch{return json({error:"Request body must be valid JSON."},400,origin);}
   if(JSON.stringify(body).length>5_000_000)return json({error:"Request is too large."},413,origin);
   const model=env.OPENAI_MODEL||"gpt-6-luna";
-  let input,maxOutput=1600;
+  let input,maxOutput=2400;
   if(body.mode==="chat"){
    const message=String(body.message||"").trim(),context=String(body.farmContext||"");
    if(!message||message.length>1200)return json({error:"Enter a question of 1,200 characters or fewer."},400,origin);
@@ -45,7 +45,8 @@ export default {
     return json({error:"OpenAI API error: "+String(msg).slice(0,260)},upstream.status>=500?502:400,origin);
    }
    const answer=outputText(data);
-   if(!answer)return json({error:"The AI provider returned no text. Please try again."},502,origin);
+   if(!answer){const reason=data?.incomplete_details?.reason;const state=data?.status||"unknown";return json({error:"The AI provider returned no text (response status: "+String(state)+ (reason?"; reason: "+String(reason):"")+"). Please try again."},502,origin);}
+   if(data?.status==="incomplete"){return json({answer:answer+"\n\n[This answer was cut short by the AI provider. Ask me to continue from where it stopped.] ",model,incomplete:true},200,origin);}
    return json({answer,model},200,origin);
   }catch(error){return json({error:"Could not reach the AI provider. Check Worker connectivity and try again."},502,origin);}
  }
