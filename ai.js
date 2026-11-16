@@ -42,6 +42,7 @@ async function loadChats(){
  renderConversationList();showConversation(activeId);
 }
 async function persist(chat){
+ if(chat.id===activeId)chat.messages=history.map(m=>({...m}));
  chat.updatedAt=Date.now();
  const i=conversations.findIndex(x=>x.id===chat.id);
  if(i<0)conversations.push(chat);else conversations[i]=chat;
@@ -96,7 +97,12 @@ async function deleteConversation(id){
  if(activeId===id){if(conversations.length){conversations.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));activeId=conversations[0].id;showConversation(activeId)}else await newConversation()}
  renderConversationList();
 }
-function append(role,content){history.push({role,content});renderMessages()}
+function append(role,content){
+ history.push({role,content});
+ const chat=current();
+ if(chat)chat.messages=history.map(m=>({...m}));
+ renderMessages();
+}
 async function send(raw){
  const message=String(raw||'').trim();if(!message||busy)return;
  if(!current())await newConversation();
