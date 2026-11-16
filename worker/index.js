@@ -35,7 +35,7 @@ export default {
    if(image.length>4_000_000||!/^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image))return json({error:"Photo must be a compressed JPEG, PNG or WebP image under the upload limit."},400,origin);
    const flock=body.flockContext?JSON.stringify(body.flockContext).slice(0,1200):"No flock details selected.";
    input=[{role:"system",content:SYSTEM_IMAGE},{role:"user",content:[{type:"input_text",text:"Estimate the number of birds visible in this photo. Flock context (may describe the whole flock, not the visible birds): "+flock},{type:"input_image",image_url:image,detail:"high"}]}];
-   maxOutput=500;
+   maxOutput=1400;
   }else return json({error:"Unknown request mode."},400,origin);
   try{
    const upstream=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Authorization":"Bearer "+env.OPENAI_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({model,input,max_output_tokens:maxOutput,store:false})});
