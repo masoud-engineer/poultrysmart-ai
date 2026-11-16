@@ -59,6 +59,9 @@ function renderConversationList(){
   const item=document.createElement('div');item.className='ai-conversation-item'+(chat.id===activeId?' active':'');
   const open=document.createElement('button');open.type='button';open.className='ai-conversation-open';open.textContent=chat.title||'New conversation';open.title=chat.title||'New conversation';open.dataset.openChat=chat.id;
   const del=document.createElement('button');del.type='button';del.className='ai-conversation-delete secondary';del.textContent='×';del.title='Delete this conversation';del.setAttribute('aria-label','Delete '+(chat.title||'conversation'));del.dataset.deleteChat=chat.id;
+  // Bind each row directly so opening a saved chat does not depend on delegated clicks.
+  open.addEventListener('click',()=>showConversation(chat.id));
+  del.addEventListener('click',()=>deleteConversation(chat.id));
   item.append(open,del);host.append(item);
  });
 }
@@ -73,8 +76,10 @@ function renderMessages(){
 }
 function showConversation(id){
  const chat=conversations.find(x=>x.id===id);if(!chat)return;
+ if(!Array.isArray(chat.messages)){status('This saved conversation has no readable message history.');return;}
  activeId=id;history=chat.messages.map(m=>({...m}));renderConversationList();renderMessages();
- status('Conversation saved on this device. Your farm records remain separate.');
+ status('Opened saved conversation. It remains stored on this device.');
+ $('aiQuestion').focus();
 }
 async function newConversation(){
  if(busy)return;
@@ -125,10 +130,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
  $('aiForm').addEventListener('submit',e=>{e.preventDefault();send($('aiQuestion').value)});
  $('aiQuestion').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send($('aiQuestion').value)}});
  $('aiClear').addEventListener('click',newConversation);
- $('aiConversationList').addEventListener('click',e=>{
-  const open=e.target.closest('[data-open-chat]');if(open){showConversation(open.dataset.openChat);return}
-  const del=e.target.closest('[data-delete-chat]');if(del)deleteConversation(del.dataset.deleteChat);
- });
+ // Conversation rows attach their own open/delete handlers in renderConversationList().
  $('aiNewChat').addEventListener('click',newConversation);
  document.addEventListener('click',e=>{const b=e.target.closest('[data-ai-prompt]');if(b)send(b.dataset.aiPrompt)});
  $('photo').addEventListener('change',()=>{$('aiPhotoEstimate').disabled=!$('photo').files?.length;$('aiPhotoResult').textContent=$('photo').files?.length?'Photo ready. Request an AI estimate when you are ready.':'No photo selected.'});
