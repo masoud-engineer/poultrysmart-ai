@@ -17,7 +17,7 @@ Mobile-first poultry farm management PWA. This first release provides flock, fee
 
 ## Not yet implemented
 - Automatic AI chicken detection. Photo capture is not AI inference. A properly licensed model, browser runtime, representative poultry dataset and real-device validation are required.
-- Cloud accounts, remote database, multi-device synchronization or user roles.
+- Automatic record-level merge for simultaneous edits, staff invitations and role management. The initial cloud pilot provides authenticated farm snapshots with revision-based conflict protection.
 - Veterinary diagnosis or automated disease prediction.
 - Universal breed-specific feed recommendations. Set feed targets using a current breed guide or qualified poultry nutrition adviser.
 
