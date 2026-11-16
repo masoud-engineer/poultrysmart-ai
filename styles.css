@@ -31,3 +31,5 @@
 .ai-conversation-delete{padding:6px 9px;flex:0 0 auto;font-size:14px}
 .ai-workspace .ai-chat-card{min-width:0}
 @media(max-width:800px){.ai-workspace{grid-template-columns:1fr}.ai-conversation-list{display:flex;max-height:none;overflow-x:auto;padding-bottom:4px}.ai-conversation-item{flex:0 0 190px}.ai-history-panel>.row{align-items:center}}
+
+.camera-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.camera-actions label{margin:0}.camera-actions .button{cursor:pointer}
