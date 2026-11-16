@@ -9,6 +9,7 @@ Mobile-first poultry farm management PWA. This first release provides flock, fee
 - User-configured daily feed target in grams per bird.
 - Feed receipt and issue ledger with stock-balance validation.
 - Camera photo capture and preview, with manually confirmed count-check records.
+- Saved AI camera validation history with local photo previews, AI estimate text and manually verified counts. Validation records are stored locally and included in JSON backups.
 - Activity history, population summaries and feed reports.
 - CSV activity export and JSON backup/restore.
 - IndexedDB persistence with localStorage fallback.
