@@ -184,7 +184,10 @@ function renderInsights(){
        financialTransactions:d.finance.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).map(x=>({date:x.date,type:x.type,category:x.category,amount:x.amount,description:x.note||''}))};
      return JSON.stringify(data).slice(0,14000);
    },
-   getCameraFlock:()=>{const x=f($('countFlock').value);return x?{name:x.name,type:x.type,breed:x.breed||'',currentRecordedPopulation:pop(x)}:null;}
+   getCameraFlock:()=>{const x=f($('countFlock').value);return x?{name:x.name,type:x.type,breed:x.breed||'',currentRecordedPopulation:pop(x)}:null;},
+   previewCameraPhoto:file=>{if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=URL.createObjectURL(file);$('preview').innerHTML='<img alt="Flock photo" src="'+photoUrl+'">';$('clearPhoto').disabled=false;},
+   clearCameraPhoto:()=>{if(photoUrl)URL.revokeObjectURL(photoUrl);photoUrl=null;$('preview').innerHTML='📷<small>Flock photo preview</small>';$('clearPhoto').disabled=true;},
+   saveCameraValidation:async record=>{if(!record.flockId)throw new Error('Select a flock first.');d.counts.push({id:uid(),flock:record.flockId,count:record.manualCount,date:today(),notes:'AI estimate: '+record.estimate,source:'AI camera validation',aiEstimate:record.estimate,manualCount:record.manualCount,photoData:record.photo});await save();render();toast('AI camera validation saved');}
  };
 
 function net(){$('network').textContent=navigator.onLine?'● Online':'● Offline'}window.addEventListener('online',net);window.addEventListener('offline',net);
